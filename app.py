@@ -1,54 +1,42 @@
-from openai import OpenAI
-from dotenv import load_dotenv
-import os
 import streamlit as st
 
-# 0. 환경설정
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    raise RuntimeError("OPENAI_API_KEY가 설정되지 않았습니다.")
+from ui.sidebar import render_sidebar
+from ui.tutorial import render_tutorial
+from ui.home import render_home
 
-client = OpenAI(api_key=api_key)
+st.set_page_config(page_title="voca海", page_icon="🐋", layout="wide")
 
+# 글자 크게(눈 피로 ↓)
+st.markdown("""
+<style>
+html, body, [class*="css"] { font-size: 18px; }
+.block-container { padding-top: 2rem; padding-bottom: 2rem; }
+</style>
+""", unsafe_allow_html=True)
 
-st.set_page_config(
-    page_title="voca海(Hǎi) | voca High",
-    layout="wide"
-)
+# 1) 사이드바
+render_sidebar()
 
-st.title("voca海 🐋")
-st.caption("단어의 바다에서 자유로이 날다!")
+# 2) 튜토리얼(원하면 보여주기)
+render_tutorial(expanded=False)
 
-with st.sidebar:
-    st.header("학습자 설정")
+# 3) 메인 화면: 메뉴에 따라 페이지 표시
+menu = st.session_state.get("menu", "홈")
 
-    nickname = st.text_input("학습자 별명", placeholder="예: voca_hae")
-    menu = st.radio(
-        "메뉴 선택",
-        ["단어시험", "어순 연습", "작문", "단어사전", "대시보드"]
-    )
-st.markdown("<div style='height:40px'></div>", unsafe_allow_html=True)
-
-st.markdown(
-    """
-    <h1 style='text-align:center;'>🐋</h1>
-    <h2 style='text-align:center;'>단어의 바다에서 자유로이 날다!</h2>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    """
-    <p style='text-align:center; font-size:16px;'>
-    보카하이는 HSK 등 중국어 시험을 준비하는 학습자를 위한<br>
-    자료 기반 + AI 활용 단어·작문 학습 페이지입니다.
-    </p>
-    """,
-    unsafe_allow_html=True
-)
-
-st.markdown("<div style='height:20px'></div>", unsafe_allow_html=True)
-
-if st.button("🌊 시작하기"):
-    st.session_state["show_tutorial"] = True
+if menu == "홈":
+    render_home()
+elif menu == "단어시험":
+    st.header("단어시험")
+    st.info("여기에 단어시험 UI/로직이 들어갈 예정이에요.")
+elif menu == "어순 연습":
+    st.header("어순 연습")
+    st.info("여기에 어순 맞추기 UI/로직이 들어갈 예정이에요.")
+elif menu == "작문":
+    st.header("작문")
+    st.info("여기에 작문 문제/채점 UI/로직이 들어갈 예정이에요.")
+elif menu == "단어사전":
+    st.header("단어사전")
+    st.info("여기에 단어 검색 UI/로직이 들어갈 예정이에요.")
+else:
+    st.header("대시보드")
+    st.info("여기에 학습 기록/그래프 UI가 들어갈 예정이에요.")

@@ -1,6 +1,6 @@
 import streamlit as st
 
-def render_tutorial(expanded=False):
+def show_tutorial(expanded=False):
     with st.expander("📘 voca海 사용 가이드", expanded=expanded):
         st.markdown("""
 ### 1) 단어시험

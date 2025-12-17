@@ -2,10 +2,11 @@ import streamlit as st
 
 MENU = ["홈", "단어시험", "어순 연습", "작문", "단어사전", "대시보드"]
 
-def render_sidebar():
+def show_sidebar():
     st.sidebar.header("voca海 설정")
-
-    nickname = st.sidebar.text_input("학습자 별명", placeholder="예: voca_hae")
+    
+# 입력창을 만들어서 입력이 되면(입력값有), 전체에서 쓰게 session state "nickname에 저장해라"
+    nickname = st.sidebar.text_input("학습자 별명", placeholder="예: voca_hai")
     if nickname:
         st.session_state["nickname"] = nickname
 

@@ -1,4 +1,6 @@
 # 경로: features/vocab_upload.py
+# 변경 내용: 세션 유지 상태에서 현재 작업 중인 파일명을 화면에 노출
+
 import streamlit as st
 import pandas as pd
 from core.text_change import change_text_from_upload
@@ -16,6 +18,7 @@ def show_vocab_upload():
     st.subheader("📄 시험 범위 설정 (PDF)")
     uploaded_file = st.file_uploader("단어장 파일을 올려주세요.", type=["pdf", "txt"], key="vocab_uploader")
 
+    # 1. 파일을 새로 올렸을 때만 분석 로직 실행
     if uploaded_file:
         if st.session_state.get('uploaded_filename') != uploaded_file.name:
             if 'final_vocab_df' in st.session_state:
@@ -29,56 +32,58 @@ def show_vocab_upload():
             n_parsed = len(parsed_df)
             n_missing = len(parsed_df[parsed_df['flags'] != 'OK'])
             
-            # 빈칸이 있으면 AI가 1차 수리를 진행
             if n_missing > 0:
                 st.info(f"📊 `{n_parsed}`개 항목 중 빈칸 `{n_missing}`개를 발견하여 AI가 1차 수리를 시작합니다.")
                 final_df = process_vocab_with_llm(parsed_df, text)
             else:
                 final_df = parsed_df
 
-            # [핵심] 유저가 직접 선택할 수 있도록 '선택' 컬럼 추가
             if '선택' not in final_df.columns:
-                final_df.insert(0, '선택', True) # 기본값은 모두 체크됨
+                final_df.insert(0, '선택', True)
 
             st.session_state['final_vocab_df'] = final_df
             st.session_state['uploaded_filename'] = uploaded_file.name
             st.toast("✨ 분석 완료!")
 
-        # ---------------------------------------------------------
-        # ⚠️ [회원님 요청] 현실적인 안내 문구 추가
-        # ---------------------------------------------------------
+    # ---------------------------------------------------------
+    # [핵심 수정] 데이터가 있을 때 파일명과 목록 노출
+    # ---------------------------------------------------------
+    if st.session_state.get('final_vocab_df') is not None:
+        # [추가] 현재 작업 중인 파일 제목 표시
+        current_fname = st.session_state.get('uploaded_filename', '알 수 없는 파일')
+        st.success(f"📂 **현재 불러온 파일:** `{current_fname}`")
+
         st.warning("""
         **📢 이용 안내**
-        * 시스템이 AI와 로직으로 두세 번 체크하지만, 파일 형식에 따라 실제 단어 수와 차이가 있을 수 있습니다.
-        * 아래 미리보기에서 형식이 이상한 단어는 **'선택' 체크박스를 해제**해 주세요.
-        * 단어장 형식에 따라 **품사(pos) 분류**가 지원되지 않을 수 있습니다.
+        * 시스템이 AI와 로직으로 여러번 체크하지만, 실제 단어 수와 차이가 있을 수 있습니다.
+        * 아래 **미리보기 목록을 펼쳐서** 형식이 이상하거나 잘못된 단어는 직접 수정하거나 
+          체크박스 해제하여 제외가 가능합니다.
         """)
 
-        df_to_show = st.session_state['final_vocab_df']
-        st.markdown(f"👇 **총 {len(df_to_show)}개의 항목이 검색되었습니다.**")
-        
-        # [구조 변경] 유저가 체크박스로 시험 볼 단어만 선택하는 에디터
-        edited_df = st.data_editor(
-            df_to_show, 
-            column_config={
-                "선택": st.column_config.CheckboxColumn(
-                    "시험 포함",
-                    help="시험에 포함할 단어만 체크하세요.",
-                    default=True,
-                )
-            },
-            disabled=["flags"], # flags는 유저가 수정할 필요 없음
-            use_container_width=True, 
-            key="vocab_editor_final", 
-            height=400
-        )
-        
-        # ---------------------------------------------------------
-        # 🚀 시험 시작 로직 (선택된 단어만 필터링)
-        # ---------------------------------------------------------
+        # [수정] Expander 제목에도 파일명 반영
+        with st.expander(f"👁️ [{current_fname}] 단어 목록 보기 및 수정 (클릭)", expanded=False):
+            df_to_show = st.session_state['final_vocab_df']
+            st.markdown(f"👇 **총 {len(df_to_show)}개의 항목이 검색되었습니다. 오타를 직접 클릭해서 고쳐보세요.**")
+            
+            edited_df = st.data_editor(
+                df_to_show, 
+                column_config={
+                    "선택": st.column_config.CheckboxColumn(
+                        "시험 포함",
+                        help="시험에 포함할 단어만 체크하세요.",
+                        default=True,
+                    )
+                },
+                use_container_width=True, 
+                key="vocab_editor_final", 
+                height=400,
+                num_rows="dynamic" 
+            )
+            
+            st.session_state['final_vocab_df'] = edited_df
+
         if st.button("🚀 선택한 단어로 시험 시작하기", type="primary", use_container_width=True):
-            # '선택' 컬럼이 True인 단어만 골라냄
-            selected_vocab = edited_df[edited_df['선택'] == True].copy()
+            selected_vocab = st.session_state['final_vocab_df'][st.session_state['final_vocab_df']['선택'] == True].copy()
             
             if selected_vocab.empty:
                 st.error("시험을 볼 단어를 하나 이상 선택해 주세요!")
@@ -87,3 +92,5 @@ def show_vocab_upload():
                 st.session_state['quiz_status'] = 'playing' 
                 st.balloons() 
                 st.rerun()
+    else:
+        st.info("💡 단어장 파일을 먼저 업로드해 주세요.")

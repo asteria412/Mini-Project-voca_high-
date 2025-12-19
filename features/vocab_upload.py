@@ -33,7 +33,7 @@ def show_vocab_upload():
             n_missing = len(parsed_df[parsed_df['flags'] != 'OK'])
             
             if n_missing > 0:
-                st.info(f"📊 `{n_parsed}`개 항목 중 빈칸 `{n_missing}`개를 발견하여 AI가 1차 수리를 시작합니다.")
+                st.info(f"📊 `{n_parsed}`개 항목 중 빈칸 `{n_missing}`개를 발견하여 AI가 수리를 시작합니다.")
                 final_df = process_vocab_with_llm(parsed_df, text)
             else:
                 final_df = parsed_df
@@ -55,7 +55,7 @@ def show_vocab_upload():
 
         st.warning("""
         **📢 이용 안내**
-        * 시스템이 AI와 로직으로 여러번 체크하지만, 실제 단어 수와 차이가 있을 수 있습니다.
+        * 시스템이 AI와 로직으로 반복 체크하지만, 실제 단어 수와 차이가 있을 수 있습니다.
         * 아래 **미리보기 목록을 펼쳐서** 형식이 이상하거나 잘못된 단어는 직접 수정하거나 
           체크박스 해제하여 제외가 가능합니다.
         """)

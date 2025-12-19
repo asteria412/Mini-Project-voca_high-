@@ -1,8 +1,31 @@
 # 경로: features/vocab_quiz.py
-# 상세 내용: 주관식 믹스 퀴즈 + [추가] 이상한 문제 제외 및 모수 조정 로직
+# 상세 내용: 주관식 믹스 퀴즈 + [유연한 정답 채점] + 문제 제외/모수 조정
 
 import streamlit as st
 import random
+import re  # [추가] 정규표현식을 사용하기 위해 추가
+
+def check_answer(user_input, correct_answer):
+    """
+    [유연한 채점 로직]
+    정답 데이터가 "넓다 광대하다" 또는 "넓다, 광대하다" 처럼 되어 있을 때,
+    사용자가 쉼표나 공백으로 구분된 단어 중 하나만 입력해도 정답으로 인정합니다.
+    """
+    # 1. 입력값 정제
+    user = str(user_input).strip()
+    if not user: 
+        return False # 입력 없으면 오답
+    
+    # 2. 정답 데이터 정제 (쉼표, 슬래시, 공백을 모두 구분자로 처리)
+    # 예: "넓다 광대하다" -> ['넓다', '광대하다']
+    # 예: "넓다, 광대하다" -> ['넓다', '광대하다']
+    candidates = re.split(r'[,/ ]+', str(correct_answer))
+    
+    # 리스트 정제 (빈 문자열 제거 및 공백 제거)
+    candidates = [c.strip() for c in candidates if c.strip()]
+
+    # 3. 비교 (하나라도 일치하면 정답)
+    return user in candidates
 
 def show_quiz_page():
     # 1. 기초 데이터 유효성 검사
@@ -42,7 +65,7 @@ def show_quiz_page():
                     'item': item,
                     'type': quiz_type,
                     'user_ans': "",
-                    'exclude': False # [추가] 제외 여부 초기값
+                    'exclude': False 
                 })
             
             st.session_state['current_quiz'] = quiz_list
@@ -66,7 +89,7 @@ def show_quiz_page():
                 with col_text:
                     st.write(f"**문제 {i+1}.**")
                 with col_opt:
-                    # [추가] 문제 제외 체크박스
+                    # 문제 제외 체크박스
                     q['exclude'] = st.checkbox("문제 제외", key=f"ex_{i}", help="데이터가 이상하면 체크하세요. 점수 계산에서 빠집니다.")
                 
                 if q['type'] == 'zh_to_ko':
@@ -85,15 +108,15 @@ def show_quiz_page():
                 st.rerun()
 
     # ---------------------------------------------------------
-    # 4. 채점 및 결과 리포트 (모수 조정 로직 포함)
+    # 4. 채점 및 결과 리포트 (유연한 채점 적용)
     # ---------------------------------------------------------
     else:
         st.subheader("📊 채점 결과")
         correct_count = 0
-        excluded_count = 0 # [추가] 제외된 문제 수 카운트
+        excluded_count = 0 
         
         for i, q in enumerate(quiz_data):
-            # [추가] 제외된 문제는 채점하지 않고 건너뜀
+            # 제외된 문제는 채점하지 않고 건너뜀
             if q.get('exclude'):
                 excluded_count += 1
                 with st.expander(f"문제 {i+1}: ⏭️ 제외됨", expanded=False):
@@ -103,15 +126,18 @@ def show_quiz_page():
             item = q['item']
             user_ans = q['user_ans'].strip()
             
+            # [수정] 정답 여부 판단 로직 개선 (check_answer 함수 사용)
             if q['type'] == 'zh_to_ko':
-                raw_correct = str(item['ko'])
-                keywords = [k.strip() for k in raw_correct.replace(',', '/').split('/') if k.strip()]
-                is_correct = any(k in user_ans for k in keywords) if user_ans else False
-                display_correct = raw_correct
+                target_correct = str(item['ko'])
+                is_correct = check_answer(user_ans, target_correct)
+                display_correct = target_correct
             else:
-                display_correct = str(item['zh'])
-                is_correct = (user_ans == display_correct)
+                target_correct = str(item['zh'])
+                # 한자 문제도 혹시 동의어가 있을 수 있으니 check_answer 사용 (보통은 1개지만 유연하게)
+                is_correct = check_answer(user_ans, target_correct)
+                display_correct = target_correct
 
+            # 결과 표시
             with st.expander(f"문제 {i+1}: {'✅ 정답' if is_correct else '❌ 오답'}", expanded=True):
                 col_q, col_a = st.columns(2)
                 with col_q:
@@ -124,7 +150,7 @@ def show_quiz_page():
                 if is_correct:
                     correct_count += 1
 
-        # [수정] 최종 스코어 계산 (모수 = 전체 문제 - 제외된 문제)
+        # 최종 스코어 계산 (모수 = 전체 문제 - 제외된 문제)
         st.divider()
         final_total = len(quiz_data) - excluded_count
         

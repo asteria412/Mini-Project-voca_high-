@@ -6,6 +6,7 @@ from ui.home import show_home
 from features.vocab_upload import show_vocab_upload
 from features.vocab_quiz import show_quiz_page
 from features.word_order import show_word_order_page
+from features.writing import show_writing_page  # [추가] 작문 페이지 임포트
 
 # 페이지 설정
 st.set_page_config(page_title="voca海", page_icon="🐋", layout="wide")
@@ -13,7 +14,7 @@ st.set_page_config(page_title="voca海", page_icon="🐋", layout="wide")
 # [복구] 글자 크게 및 레이아웃 패딩 설정 (눈 피로 ↓)
 st.markdown("""
 <style>
-html, body, [class*="css"] { font-size: 18px; }
+html, body, [class*="css"] { font-size: 20px; }
 .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 </style>
 """, unsafe_allow_html=True)
@@ -52,7 +53,8 @@ elif menu == "어순 연습":
 
 elif menu == "작문":
     st.header("작문")
-    st.info("여기에 작문 문제/채점 UI/로직이 들어갈 예정이에요.")
+    # [수정] 작문 페이지 연결
+    show_writing_page()
 
 elif menu == "단어사전":
     st.header("단어사전")
@@ -60,4 +62,4 @@ elif menu == "단어사전":
 
 else:
     st.header("대시보드")
-    st.info("여기에 학습 기록/그래프 UI가 들어갈 예정이에요.")    
+    st.info("여기에 학습 기록/그래프 UI가 들어갈 예정이에요.")

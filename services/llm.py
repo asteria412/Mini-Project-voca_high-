@@ -80,3 +80,48 @@ def process_vocab_with_llm(df, raw_text):
         df = df.reset_index(drop=True)
 
     return df
+
+# 어순 맞추기 관련 명령 함수 
+
+def generate_sentence_puzzle(word, level="HSK5"):
+    """
+    선택한 단어를 사용하여 작문을 하고, 어순 배열 문제를 생성합니다.
+    """
+    if not client:
+        return None
+
+    prompt = f"""
+    당신은 중국어 교육 전문가입니다.
+    사용자가 선택한 단어: '{word}'
+    
+    [미션]
+    1. 이 단어를 포함한 {level} 수준의 중국어 문장을 하나 만드세요. (15글자 내외)
+    2. 그 문장의 한국어 해석을 쓰세요.
+    3. 그 문장을 의미 단위(단어 또는 구)로 4~6개로 쪼개세요.
+    4. 병음(Pinyin)도 제공하세요.
+
+    [출력 형식 - JSON 포맷만 출력, 코드블록 없이]
+    {{
+        "chinese": "문장전체",
+        "korean": "한국어해석",
+        "pinyin": "성조포함병음",
+        "pieces": ["쪼갠단어1", "쪼갠단어2", "쪼갠단어3", "쪼갠단어4"]
+    }}
+    """
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o",  # 또는 gpt-3.5-turbo
+            messages=[{"role": "system", "content": "당신은 JSON 데이터를 생성하는 전문가 입니다.."},
+                      {"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        content = response.choices[0].message.content.strip()
+        # 혹시 모를 코드블록 마크 제거
+        content = content.replace("```json", "").replace("```", "")
+        
+        import json
+        return json.loads(content)
+    except Exception as e:
+        print(f"Error generating puzzle: {e}")
+        return None

@@ -4,7 +4,8 @@ from ui.sidebar import show_sidebar
 from ui.tutorial import show_tutorial
 from ui.home import show_home
 from features.vocab_upload import show_vocab_upload
-from features.vocab_quiz import show_quiz_page # 파일명 vocab_quiz 확인!
+from features.vocab_quiz import show_quiz_page
+from features.word_order import show_word_order_page
 
 # 페이지 설정
 st.set_page_config(page_title="voca海", page_icon="🐋", layout="wide")
@@ -46,5 +47,17 @@ elif menu == "단어시험":
 
 elif menu == "어순 연습":
     st.header("어순 연습")
-    st.info("여기에 어순 맞추기 UI/로직이 들어갈 예정이에요.")
-# ... (이하 동일)
+    # show_word_order_page() 함수 실행
+    show_word_order_page()
+
+elif menu == "작문":
+    st.header("작문")
+    st.info("여기에 작문 문제/채점 UI/로직이 들어갈 예정이에요.")
+
+elif menu == "단어사전":
+    st.header("단어사전")
+    st.info("여기에 단어 검색 UI/로직이 들어갈 예정이에요.")
+
+else:
+    st.header("대시보드")
+    st.info("여기에 학습 기록/그래프 UI가 들어갈 예정이에요.")    

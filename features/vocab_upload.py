@@ -41,7 +41,7 @@ def show_vocab_upload():
             n_missing = len(parsed_df[parsed_df['flags'] != 'OK'])
             
             if n_missing > 0:
-                st.info(f"📊 `{n_parsed}`개 항목 중 빈칸 `{n_missing}`개를 발견하여 AI가 수리를 시작합니다.")
+                st.info(f"📊 `{n_parsed}`개 항목 중 빈칸 `{n_missing}`개를 발견하여 AI가 보정을 시작합니다.")
                 final_df = process_vocab_with_llm(parsed_df, text)
             else:
                 final_df = parsed_df

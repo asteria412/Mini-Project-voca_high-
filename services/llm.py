@@ -11,7 +11,7 @@ load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # =============================================================================
-# [SECTION 1] 파싱된 단어 검증 및 빈칸 수리부
+# [SECTION 1] 파싱된 단어 검증 및 빈칸 보정부
 # =============================================================================
 
 # [프롬프트 수정] 채우기가 아닌 '존재 증거 찾기'에 집중
@@ -34,7 +34,7 @@ def process_vocab_with_llm(df, raw_text):
     """
     if df.empty: return df
     
-    # 1. 수리가 필요한 '빈칸 행'들만 핀포인트로 추출
+    # 1. 보정이 필요한 '빈칸 행'들만 핀포인트로 추출
     repair_targets = df[df['flags'] != 'OK'].copy()
     if repair_targets.empty: return df
 

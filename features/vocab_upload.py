@@ -1,5 +1,4 @@
 # 경로: features/vocab_upload.py
-# 변경 내용: 세션 유지 상태에서 현재 작업 중인 파일명을 화면에 노출
 
 import streamlit as st
 import pandas as pd

@@ -3,7 +3,9 @@
 
 import streamlit as st
 import random
-import re  # [추가] 정규표현식을 사용하기 위해 추가
+import re   # [추가] 정규표현식을 사용하기 위해 추가
+# [추가] 구글 시트 저장 함수 임포트
+from services.google_sheets import save_score
 
 def check_answer(user_input, correct_answer):
     """
@@ -30,11 +32,15 @@ def check_answer(user_input, correct_answer):
 def show_quiz_page():
     # 1. 기초 데이터 유효성 검사
     if 'quiz_vocab' not in st.session_state or st.session_state['quiz_vocab'].empty:
-        st.warning("⚠️ 시험을 볼 단어가 없습니다. 업로드 화면에서 단어를 선택해 주세요.")
-        if st.button("⬅️ 단어 선택하러 가기"):
-            st.session_state['quiz_status'] = 'ready'
-            st.rerun()
-        return
+        # (혹시 quiz_vocab이 없으면 전체 단어장에서 가져오도록 호환성 처리)
+        if 'final_vocab_df' in st.session_state:
+            st.session_state['quiz_vocab'] = st.session_state['final_vocab_df']
+        else:
+            st.warning("⚠️ 시험을 볼 단어가 없습니다. 업로드 화면에서 단어를 선택해 주세요.")
+            if st.button("⬅️ 단어 선택하러 가기"):
+                st.session_state['quiz_status'] = 'ready'
+                st.rerun()
+            return
 
     vocab_df = st.session_state['quiz_vocab']
     
@@ -70,6 +76,11 @@ def show_quiz_page():
             
             st.session_state['current_quiz'] = quiz_list
             st.session_state['quiz_finished'] = False
+            
+            # [재시험 시 저장 플래그 초기화]
+            if 'saved_to_sheets' in st.session_state:
+                del st.session_state['saved_to_sheets']
+            
             st.rerun()
         return
 
@@ -157,15 +168,43 @@ def show_quiz_page():
         if final_total > 0:
             score_percent = int(correct_count / final_total * 100)
             st.metric("최종 점수", f"{correct_count} / {final_total}", f"{score_percent}점 (제외 {excluded_count}개)")
+            
+            # =========================================================
+            # [추가] 구글 시트 자동 저장 로직
+            # =========================================================
+            nickname = st.session_state.get("nickname", "")
+            if nickname:
+                if 'saved_to_sheets' not in st.session_state:
+                    with st.spinner(f"☁️ {nickname}님의 점수 저장 중..."):
+                        # save_score(별명, 시험유형, 점수)
+                        # 주관식이므로 점수(score_percent)를 저장합니다.
+                        success = save_score(nickname, "단어시험(주관식)", score_percent)
+                        
+                        if success:
+                            st.toast("✅ 구글 시트 저장 완료!", icon="🎉")
+                            st.session_state['saved_to_sheets'] = True
+                        else:
+                            st.error("❌ 저장 실패")
+                else:
+                    st.info("✅ 이미 저장된 기록입니다.")
+            else:
+                st.warning("⚠️ 별명(로그인)이 없어서 점수가 저장되지 않았습니다.")
+            # =========================================================
+            
         else:
             st.warning("모든 문제가 제외되어 점수를 계산할 수 없습니다.")
         
         if st.button("🔄 다시 시험 보기", use_container_width=True):
             del st.session_state['current_quiz']
             st.session_state['quiz_finished'] = False
+            # 재시험을 위해 저장 기록 삭제
+            if 'saved_to_sheets' in st.session_state:
+                del st.session_state['saved_to_sheets']
             st.rerun()
             
         if st.button("📁 단어 다시 선택하기", use_container_width=True):
             del st.session_state['current_quiz']
             st.session_state['quiz_status'] = 'ready'
+            if 'saved_to_sheets' in st.session_state:
+                del st.session_state['saved_to_sheets']
             st.rerun()

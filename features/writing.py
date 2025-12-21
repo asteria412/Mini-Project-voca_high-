@@ -14,6 +14,8 @@ from services.llm import (
     evaluate_writing_v2,          # 통합 채점 (가점제 로직)
     generate_hybrid_question_99   # [NEW] 99번 하이브리드 출제
 )
+# [추가] 점수 저장을 위한 함수 불러오기
+from services.google_sheets import save_score
 
 def show_writing_page():
     st.title("✍️ HSK 5급 실전 작문")
@@ -61,7 +63,7 @@ def show_writing_page():
             if st.button("🔀 실전 문제 생성 (내 단어 + 트렌드 믹스)", type="primary", use_container_width=True):
                 # 단어가 너무 적으면 믹스 불가 (최소 3개 필요)
                 if len(all_words) < 3:
-                     st.error(f"⚠️ 단어장에 최소 3개 이상의 단어가 있어야 믹스 출제가 가능합니다. (현재 {len(all_words)}개)")
+                      st.error(f"⚠️ 단어장에 최소 3개 이상의 단어가 있어야 믹스 출제가 가능합니다. (현재 {len(all_words)}개)")
                 else:
                     with st.spinner("AI 출제위원이 회원님 단어와 2025 트렌드를 조합 중입니다..."):
                         # [핵심] services/llm.py의 하이브리드 함수 호출
@@ -123,10 +125,31 @@ def show_writing_page():
                             # 통합 채점 함수 호출
                             feedback = evaluate_writing_v2('99', user_input, target_zh_list)
                             st.session_state['wr_99_feedback'] = feedback
+                            
+                            # [수정] 제출 시점에 닉네임이 있으면 바로 저장
+                            nickname = st.session_state.get("nickname", "")
+                            if nickname:
+                                save_score(nickname, "작문(99번)", feedback['score'])
+                                st.toast("💯 점수가 저장되었습니다!")
             
-            # 4. 피드백 표시 (기존 유지)
+            # 4. 피드백 표시
             fb = st.session_state['wr_99_feedback']
             if fb:
+                # [수정] 닉네임이 없어서 저장을 못한 경우, 여기서 복구 기회 제공
+                nickname = st.session_state.get("nickname", "")
+                if not nickname:
+                    st.warning("⚠️ **별명이 없어 점수가 저장되지 않았습니다!** 아래에 별명을 입력하면 점수를 저장할 수 있습니다.")
+                    c_nick, c_btn = st.columns([3, 1])
+                    new_nick = c_nick.text_input("별명 입력", placeholder="예: voca_king", key="input_nick_99")
+                    if c_btn.button("저장하기", key="btn_save_nick_99"):
+                        if new_nick:
+                            st.session_state["nickname"] = new_nick
+                            save_score(new_nick, "작문(99번)", fb['score'])
+                            st.success(f"✅ {new_nick}님, 점수가 안전하게 저장되었습니다!")
+                            st.rerun() # 사이드바 갱신을 위해 리런
+                        else:
+                            st.error("별명을 입력해주세요.")
+                
                 st.divider()
                 st.markdown(f"### 📊 등급/점수: {fb['score']}점")
                 
@@ -156,7 +179,7 @@ def show_writing_page():
                 st.info("💪 실제 시험에서 더 좋은 점수를 얻을 수 있도록 **voca海(hǎi)|voca high**와 열심히 연습해봅시다. 고득점을 향하여!")
 
     # =========================================================================
-    # TAB 2: 100번 유형 (4대 빈출 테마 전략) - [기존 로직 유지]
+    # TAB 2: 100번 유형 (4대 빈출 테마 전략) - [수정됨]
     # =========================================================================
     with tab2:
         st.subheader("그림 작문 (100번)")
@@ -207,9 +230,30 @@ def show_writing_page():
                             feedback = evaluate_writing_v2('100', user_input, scene['scene_desc'])
                             st.session_state['wr_100_feedback'] = feedback
 
-            # 4. 피드백 표시 (99번과 동일한 스타일)
+                            # [수정] 제출 시점에 닉네임이 있으면 바로 저장
+                            nickname = st.session_state.get("nickname", "")
+                            if nickname:
+                                save_score(nickname, "작문(100번)", feedback['score'])
+                                st.toast("💯 점수가 저장되었습니다!")
+
+            # 4. 피드백 표시
             fb = st.session_state['wr_100_feedback']
             if fb:
+                # [수정] 닉네임이 없어서 저장을 못한 경우, 여기서 복구 기회 제공
+                nickname = st.session_state.get("nickname", "")
+                if not nickname:
+                    st.warning("⚠️ **별명이 없어 점수가 저장되지 않았습니다!** 아래에 별명을 입력하면 점수를 저장할 수 있습니다.")
+                    c_nick, c_btn = st.columns([3, 1])
+                    new_nick = c_nick.text_input("별명 입력", placeholder="예: voca_king", key="input_nick_100")
+                    if c_btn.button("저장하기", key="btn_save_nick_100"):
+                        if new_nick:
+                            st.session_state["nickname"] = new_nick
+                            save_score(new_nick, "작문(100번)", fb['score'])
+                            st.success(f"✅ {new_nick}님, 점수가 안전하게 저장되었습니다!")
+                            st.rerun()
+                        else:
+                            st.error("별명을 입력해주세요.")
+
                 st.divider()
                 st.markdown(f"### 📊 예상 점수: {fb['score']}점")
                 

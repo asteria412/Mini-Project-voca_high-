@@ -1,12 +1,32 @@
 # 경로: features/word_order.py
 # 상세 내용: 단어 다중 선택(최대 3개) 후 AI가 문장을 생성하고, 유저가 어순을 맞추는 학습
-# [수정] max_selections 경고창 대신 부드러운 버튼 제어 방식 적용
+# [수정] 1. 단어 조각 버튼 CSS 적용
+# [수정] 2. 점수 저장 로직 (별명 체크)
+# [수정] 3. "넣은 단어 취소" 기능 추가 (토글 방식)
 
 import streamlit as st
 import random
 from services.llm import generate_sentence_puzzle
+# [중요] 점수 저장을 위한 함수 불러오기
+from services.google_sheets import save_score
 
 def show_word_order_page():
+    # ---------------------------------------------------------
+    # [스타일] 단어 조각 버튼을 '카드'처럼 크고 예쁘게 만들기
+    # ---------------------------------------------------------
+    st.markdown("""
+    <style>
+        /* 단어 조각 버튼 공통 스타일 */
+        div.stButton > button {
+            font-size: 1.1rem !important;
+            padding: 0.6rem 0.5rem !important; /* 좌우 여백 줄임 (공간 확보) */
+            border-radius: 10px !important;
+            margin: 4px 0px;
+            width: 100%;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+
     # ---------------------------------------------------------
     # 1. 페이지 제목 및 기본 안내
     # ---------------------------------------------------------
@@ -16,78 +36,62 @@ def show_word_order_page():
     # ---------------------------------------------------------
     # 2. 데이터 유효성 검사 (단어장이 업로드되었는지 확인)
     # ---------------------------------------------------------
-    # 세션에 'final_vocab_df'가 없으면 아직 단어장을 올리지 않은 상태입니다.
     if 'final_vocab_df' not in st.session_state or st.session_state['final_vocab_df'] is None:
         st.warning("⚠️ 먼저 [단어시험] 메뉴에서 단어장을 업로드해주세요.")
-        return # 더 이상 진행하지 않고 함수 종료
+        return
 
     df = st.session_state['final_vocab_df']
     
     # ---------------------------------------------------------
-    # 3. 세션 상태 초기화 (문제 풀이 도중 데이터 유지용)
+    # 3. 세션 상태 초기화
     # ---------------------------------------------------------
-    # 현재 생성된 문제 데이터 (문장, 해석, 병음, 조각들)
     if 'wo_current_puzzle' not in st.session_state:
         st.session_state['wo_current_puzzle'] = None
-    # 유저가 순서대로 클릭한 단어 조각 리스트
     if 'wo_user_order' not in st.session_state:
         st.session_state['wo_user_order'] = []
-    # AI가 쪼개준 조각들을 무작위로 섞은 리스트 (보기 버튼용)
     if 'wo_shuffled_pieces' not in st.session_state:
         st.session_state['wo_shuffled_pieces'] = []
 
     # ---------------------------------------------------------
     # 4. 연습할 단어 선택 (Multi-Select)
     # ---------------------------------------------------------
-    # 업로드된 단어장 중 유저가 '선택(체크)'한 단어만 필터링해서 가져옵니다.
     target_words = df[df['선택'] == True]
     
     if target_words.empty:
         st.error("업로드된 단어장에서 '선택'된 단어가 없습니다.")
         return
 
-    # 드롭다운에 보여줄 문자열 생성: "한자 (뜻)" 형태
     word_options = target_words.apply(lambda x: f"{x['zh']} ({x['ko']})", axis=1).tolist()
     
-    # [수정] max_selections 옵션 제거 (시스템 기본 경고창 숨김)
     selected_options = st.multiselect(
         "연습할 단어를 선택하세요 (최대 3개):", 
         word_options,
         placeholder="단어를 검색하거나 선택하세요"
     )
     
-    # 선택된 항목("한자 (뜻)")에서 실제 AI에게 넘길 "한자"만 추출
     selected_words_zh = [opt.split('(')[0].strip() for opt in selected_options]
 
     # ---------------------------------------------------------
-    # 5. [문제 생성] 버튼 로직 (제한 개수 초과 시 제어)
+    # 5. [문제 생성] 버튼 로직
     # ---------------------------------------------------------
-    # [수정] 3개 초과 시 경고 문구 출력 및 버튼 비활성화
     if len(selected_words_zh) > 3:
         st.error(f"🖐️ 욕심쟁이! 단어는 **최대 3개**까지만 선택할 수 있어요. (현재 {len(selected_words_zh)}개)")
-        # 버튼을 보여주되 누를 수 없게(disabled) 처리
         st.button("✨ 선택한 단어들로 문장 만들기 (AI)", disabled=True)
     
-    # [수정] 0개일 때는 안내 문구만 표시 (버튼 숨김)
     elif len(selected_words_zh) == 0:
         st.info("👆 위 박스에서 단어를 선택하면 문장 생성 버튼이 나타납니다.")
         
-    # [수정] 정상 범위(1~3개)일 때만 버튼 활성화 및 동작
     else:
         if st.button("✨ 선택한 단어들로 문장 만들기 (AI)", type="primary"):
-            # 유저에게 로딩 중임을 알림
             display_words = ", ".join(selected_words_zh)
             with st.spinner(f"'{display_words}'를 모두 넣은 문장을 짓는 중..."):
                 
-                # services/llm.py의 함수를 호출하여 AI로부터 문제 데이터를 받아옴
                 puzzle_data = generate_sentence_puzzle(selected_words_zh)
                 
                 if puzzle_data:
-                    # 받아온 데이터를 세션에 저장 (화면이 새로고침돼도 유지)
                     st.session_state['wo_current_puzzle'] = puzzle_data
-                    st.session_state['wo_user_order'] = [] # 정답 입력칸 초기화
+                    st.session_state['wo_user_order'] = []
                     
-                    # 조각(pieces)을 복사해서 섞음 (원본 순서 노출 방지)
                     pieces = puzzle_data['pieces'][:]
                     random.shuffle(pieces)
                     st.session_state['wo_shuffled_pieces'] = pieces
@@ -97,7 +101,7 @@ def show_word_order_page():
     st.divider()
 
     # ---------------------------------------------------------
-    # 6. 게임 플레이 영역 (문제가 생성되었을 때만 표시)
+    # 6. 게임 플레이 영역
     # ---------------------------------------------------------
     puzzle = st.session_state['wo_current_puzzle']
     
@@ -105,36 +109,51 @@ def show_word_order_page():
         st.subheader("한국어 뜻을 보고 어순을 맞추세요.")
         st.info(f"🇰🇷 **해석:** {puzzle['korean']}")
 
-        # (A) 유저가 조립 중인 문장 표시
+        # =========================================================
+        # (A) [수정됨] 유저가 조립 중인 문장 (클릭 시 취소 기능)
+        # =========================================================
+        st.markdown("### 🔽 완성된 문장 (클릭하면 취소)")
+        
         user_ans_list = st.session_state['wo_user_order']
-        st.markdown("### 🔽 완성된 문장")
         
         if user_ans_list:
-            # 리스트에 있는 단어들을 공백으로 연결해서 문장처럼 보여줌
-            st.success(" ".join(user_ans_list))
+            # 버튼들을 가로로 나열하기 위해 columns 사용
+            cols = st.columns(len(user_ans_list))
+            for i, word in enumerate(user_ans_list):
+                # type="primary"를 줘서 '선택된 상태'임을 시각적으로 강조
+                # 클릭 시 리스트에서 해당 인덱스의 단어를 제거(pop)
+                if cols[i].button(word, key=f"remove_{i}_{word}", type="primary"):
+                    st.session_state['wo_user_order'].pop(i)
+                    st.rerun() # 화면 갱신하여 아래쪽 보기로 단어 복귀시킴
         else:
-            st.markdown("*(아래 단어 조각을 클릭하여 문장을 완성하세요)*")
+            # 비어있을 때 공간 유지용 텍스트
+            st.markdown("""
+            <div style='padding: 20px; border: 2px dashed #ddd; border-radius: 10px; text-align: center; color: #aaa;'>
+                아래 단어 조각을 클릭하여 문장을 완성하세요
+            </div>
+            """, unsafe_allow_html=True)
 
-        st.markdown("---")
+        st.write("") # 여백
 
-        # (B) 섞여있는 단어 조각 버튼들
+        # =========================================================
+        # (B) 섞여있는 단어 조각 버튼들 (클릭 시 추가)
+        # =========================================================
         st.markdown("### 🔽 단어 조각 (클릭)")
         shuffled = st.session_state['wo_shuffled_pieces']
         
-        # [중요 로직] 이미 유저가 클릭해서 답안으로 올라간 조각은 보기에서 사라져야 함
-        # 남은 조각(remaining_pieces) 리스트를 계산
+        # 남은 조각 계산: (전체 조각) - (이미 선택된 조각)
+        # 단순히 remove로 하면 중복 단어가 있을 때 꼬일 수 있으므로 카운팅 방식이 안전하지만,
+        # 여기서는 리스트 복사본에서 하나씩 지워가는 방식으로 구현
         remaining_pieces = shuffled.copy()
         for p in user_ans_list:
             if p in remaining_pieces:
-                remaining_pieces.remove(p) # 답안에 있는 건 삭제
+                remaining_pieces.remove(p) 
         
-        # 남은 조각이 있다면 버튼으로 그려줌
         if remaining_pieces:
             cols = st.columns(len(remaining_pieces))
             for idx, piece in enumerate(remaining_pieces):
-                # 각 버튼에 고유한 key를 줘야 에러가 안 남 (f"btn_{piece}_{idx}")
-                if cols[idx].button(piece, key=f"btn_{piece}_{idx}"):
-                    # 버튼 클릭 시 유저 답안 리스트에 추가하고 화면 갱신(rerun)
+                # 기본 스타일(회색) 버튼
+                if cols[idx].button(piece, key=f"add_{idx}_{piece}"):
                     st.session_state['wo_user_order'].append(piece)
                     st.rerun()
         else:
@@ -142,33 +161,39 @@ def show_word_order_page():
 
         st.markdown("---")
 
-        # (C) 하단 컨트롤 버튼 (초기화 / 채점)
+        # (C) 하단 컨트롤 버튼
         c1, c2 = st.columns(2)
         
-        # [다시 하기]: 유저가 입력한 답안만 싹 비움
-        if c1.button("🔄 다시 하기"):
+        # [다시 하기]
+        if c1.button("🔄 전체 초기화"):
             st.session_state['wo_user_order'] = []
             st.rerun()
             
-        # [정답 확인]: 유저 답안과 AI 정답을 비교
+        # [정답 확인]
         if c2.button("✅ 정답 확인"):
-            # 공백을 없애고 문장부호까지 제거해서 '글자'만 비교 (유연한 채점)
             user_sentence = "".join(st.session_state['wo_user_order'])
             correct_sentence = puzzle['chinese']
             
             import re
-            # 정규식으로 알파벳, 숫자, 한자 외 특수문자 제거
             user_clean = re.sub(r'[^\w]', '', user_sentence)
             corr_clean = re.sub(r'[^\w]', '', correct_sentence)
 
             if user_clean == corr_clean:
-                st.balloons() # 축하 효과
+                st.balloons()
                 st.success("🎉 정답입니다! 완벽해요.")
                 st.markdown(f"**문장:** {puzzle['chinese']}")
                 st.markdown(f"**병음:** {puzzle['pinyin']}")
+                
+                # [점수 저장]
+                nickname = st.session_state.get("nickname", "")
+                if nickname:
+                    save_score(nickname, "어순 연습", 100)
+                    st.toast(f"💾 {nickname}님의 점수(100점)가 저장되었습니다!", icon="✅")
+                else:
+                    st.warning("⚠️ 별명이 입력되지 않아 점수가 저장되지 않았습니다. (사이드바에서 별명을 설정하세요)")
+                
             else:
                 st.error("앗! 틀렸습니다.")
-                # 틀렸을 때는 정답을 Expander 안에 숨겨서 보여줌 (바로 스포일러 안 되게)
                 with st.expander("정답 보기"):
                     st.write(f"**정답 문장:** {puzzle['chinese']}")
                     st.write(f"**병음:** {puzzle['pinyin']}")

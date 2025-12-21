@@ -1,12 +1,17 @@
 # 파일명: app.py
 import streamlit as st
 from ui.sidebar import show_sidebar
-from ui.tutorial import show_tutorial
 from ui.home import show_home
 from features.vocab_upload import show_vocab_upload
 from features.vocab_quiz import show_quiz_page
 from features.word_order import show_word_order_page
-from features.writing import show_writing_page  # [추가] 작문 페이지 임포트
+from features.writing import show_writing_page 
+from features.dictionary import show_dictionary_page
+from features.dashboard import show_dashboard_page
+# 임시호출 #
+from services.google_sheets import save_score, get_db_connection
+import random 
+from datetime import datetime, timedelta
 
 # 페이지 설정
 st.set_page_config(page_title="voca海", page_icon="🐋", layout="wide")
@@ -28,8 +33,7 @@ menu = st.session_state.get("menu", "홈")
 # ---------------------------------------------------------
 
 if menu == "홈":
-    show_home() 
-    show_tutorial(expanded=False)                  
+    show_home()              
 
 elif menu == "단어시험":
     st.header("단어시험")
@@ -53,13 +57,36 @@ elif menu == "어순 연습":
 
 elif menu == "작문":
     st.header("작문")
-    # [수정] 작문 페이지 연결
     show_writing_page()
 
 elif menu == "단어사전":
     st.header("단어사전")
-    st.info("여기에 단어 검색 UI/로직이 들어갈 예정이에요.")
-
+    show_dictionary_page()
 else:
     st.header("대시보드")
-    st.info("여기에 학습 기록/그래프 UI가 들어갈 예정이에요.")
+    show_dashboard_page()
+     
+        
+# [임시 코드] app.py 맨 아래에 붙여넣고 저장 -> 버튼 클릭 -> 확인 후 삭제하세요.
+
+if st.sidebar.button("🧪 테스트 데이터 20개 생성 (개발용)"):
+    nickname = st.session_state.get("nickname", "TestUser")
+    if not nickname:
+        st.error("별명을 먼저 입력하세요.")
+    else:
+        types = ["단어시험(주관식)", "작문-99번", "작문-100번", "어순배열"]
+        client = get_db_connection() # services.google_sheets에 있는 함수 필요
+        if client:
+            sheet = client.open("voca_db").sheet1
+            rows = []
+            for _ in range(20):
+                # 랜덤 날짜 (최근 7일)
+                rand_date = datetime.now() - timedelta(days=random.randint(0, 7))
+                date_str = rand_date.strftime("%Y-%m-%d %H:%M:%S")
+                exam = random.choice(types)
+                score = random.randint(50, 100)
+                rows.append([date_str, nickname, exam, score])
+            
+            # 한 번에 추가
+            sheet.append_rows(rows)
+            st.success(f"✅ {nickname}님의 가짜 데이터 20개가 생성되었습니다!")        

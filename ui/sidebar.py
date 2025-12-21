@@ -19,54 +19,22 @@ def show_sidebar():
             padding-top: 5rem !important;
         }
 
-        /* 2. [최종] 메뉴 버튼(pills) 무조건 키우기 */
         /* =================================================================
-           [재수정] 메뉴가 메인 영역에 표시되므로, 사이드바 선택자 제거!
-           기존: [data-testid="stSidebar"] [data-testid="stPills"]
-           변경: [data-testid="stPills"] (메인 영역 타겟팅)
+           [최종 확정] pills 버튼 스타일링
+           - [수정] stMainBlockContainer 내부의 첫 번째 stElementContainer만 타겟팅
+           - 다른 버튼들에 영향 안 가도록 범위 제한
            ================================================================= */
         
-        /* (1) 버튼 껍데기(틀) 자체를 키움 */
-        /* [재수정] 사이드바 선택자 제거 - 메인 영역의 pills 적용 */
-        [data-testid="stPills"] button {
-            background-color: #f0f2f6 !important; /* 배경색 살짝 */
-            border: 1px solid #dcdcdc !important; /* 테두리 */
-            border-radius: 12px !important;       /* 둥글게 */
-            margin-bottom: 8px !important;        /* 버튼 사이 간격 */
-            padding-top: 15px !important;         /* 위아래 여백 확보 */
-            padding-bottom: 15px !important;
-        }
-
-        /* (2) [핵심] 버튼 안에 있는 '모든 것(*)'의 폰트 사이즈 강제 주입 */
-        /* p태그든 div든 span이든 상관없이 다 20px로 커져라! */
-        /* [재수정] 메인 영역이므로 폭 여유 있음 -> 20px 유지 */
-        [data-testid="stPills"] button * {
-            font-size: 20px !important;  /* 글자 크기 (원하는대로 조절 가능) */
-            font-weight: 700 !important; /* 굵게 */
-            line-height: 1.5 !important; /* 줄 간격 넉넉히 */
-        }
-        
-        /* (3) 마우스 올렸을 때 효과 */
-        [data-testid="stPills"] button:hover {
-            border-color: #FF4B4B !important;
-            background-color: #ffecec !important;
-            color: #FF4B4B !important;
-        }
-        
-        /* (4) 선택된 버튼 스타일 (강조) */
-        [data-testid="stPills"] button[aria-selected="true"] {
-            background-color: #FF4B4B !important;
-            color: white !important;
-        }
-        /* 선택된 버튼 안의 글자도 흰색으로 */
-        [data-testid="stPills"] button[aria-selected="true"] * {
-            color: white !important;
+        /* (1) 마우스 올렸을 때 효과 - pills 전용 */
+        /* [수정] 메인 블록 최상단의 pills만 타겟팅 */
+        .stMainBlockContainer > div > div:first-child button.e1q4kxr411:hover,
+        [data-testid="stMainBlockContainer"] > div > div:first-child button[class*="e1q4kxr"]:hover {
+            border-color: #9575CD !important;     /* 보라색 테두리 */
+            background-color: #EDE7F6 !important; /* 옅은 보라색 배경 */
         }
 
     </style>
     """, unsafe_allow_html=True)
-
-    st.sidebar.header("voca海 설정")
     
     # ---------------------------------------------------------
     # 1. 학습자 정보 입력 (체크리스트 수행)
@@ -121,10 +89,7 @@ def show_sidebar():
     st.sidebar.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
 
     # =================================================================
-    # [재수정] st.pills 유지 (메인 영역에 메뉴 표시)
-    # 현재 스크린샷처럼 메인 영역 상단에 메뉴가 표시되는 디자인 유지.
-    # st.sidebar.pills가 아닌 st.pills를 사용해야 메인 영역에 렌더링됨.
-    # CSS도 사이드바 선택자 없이 [data-testid="stPills"]만 사용.
+    # [메뉴] 메인 영역에 pills 표시
     # =================================================================
     selected_menu = st.pills(
         "메뉴 선택", 

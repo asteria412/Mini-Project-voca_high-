@@ -6,7 +6,7 @@ def show_tutorial(expanded=False):
     with st.expander("📘 voca海 사용 가이드", expanded=expanded):
         st.markdown("""
 
-## 0) 주의사항
+## ※ 주의사항
 - **새로고침**시 등록한 단어장 정보가 리셋됩니다.
 
 ### 1) 단어시험

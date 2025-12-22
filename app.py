@@ -16,11 +16,23 @@ from datetime import datetime, timedelta
 # 페이지 설정
 st.set_page_config(page_title="voca海", page_icon="🐋", layout="wide")
 
-# [복구] 글자 크게 및 레이아웃 패딩 설정 (눈 피로 ↓)
+# [수정] 글자 크기 최적화 (PC는 시원하게, 모바일은 안 잘리게)
 st.markdown("""
 <style>
-html, body, [class*="css"] { font-size: 20px; }
-.block-container { padding-top: 2rem; padding-bottom: 2rem; }
+    /* 1. PC 기본값: 18px (기존 20px보다 살짝 줄임) */
+    html, body, [class*="css"] { 
+        font-size: 18px; 
+    }
+
+    /* 2. 모바일(화면 좁을 때): 15px로 자동 축소 */
+    @media (max-width: 600px) {
+        html, body, [class*="css"] { 
+            font-size: 15px; 
+        }
+    }
+
+    /* 여백 설정은 그대로 유지 */
+    .block-container { padding-top: 2rem; padding-bottom: 2rem; }
 </style>
 """, unsafe_allow_html=True)
 

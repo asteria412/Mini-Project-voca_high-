@@ -27,7 +27,7 @@ st.markdown("""
     /* 2. 모바일(화면 좁을 때): 15px로 자동 축소 */
     @media (max-width: 600px) {
         html, body, [class*="css"] { 
-            font-size: 15px; 
+            font-size: 12px; 
         }
     }
 

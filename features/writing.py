@@ -18,7 +18,7 @@ from services.llm import (
 from services.google_sheets import save_score
 
 def show_writing_page():
-    st.header("✍️ HSK 5급 실전 작문")
+    st.subheader("✍️ HSK 5급 실전 작문")
     
     # ---------------------------------------------------------
     # 1. 데이터 유효성 체크

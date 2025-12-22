@@ -2,9 +2,8 @@ import streamlit as st
 from ui.tutorial import show_tutorial
 
 def show_home():
-    # 1. 애니메이션 규칙 정의 (CSS)
-    # 여기는 파이썬 코드가 아니라 CSS 영역이라 들여쓰기해도 괜찮지만, 
-    # 헷갈리니 그냥 다 왼쪽으로 붙이겠습니다.
+    # 1. 스타일 정의 (CSS)
+    # [중요] <style> 태그부터 왼쪽 끝에 붙입니다.
     st.markdown("""
 <style>
     @keyframes fadeInUp {
@@ -15,36 +14,55 @@ def show_home():
     .ani-2 { opacity: 0; animation: fadeInUp 0.8s ease-out 0.3s forwards; }
     .ani-3 { opacity: 0; animation: fadeInUp 0.8s ease-out 0.6s forwards; }
     .ani-4 { opacity: 0; animation: fadeInUp 0.8s ease-out 0.9s forwards; }
+    
+    .home-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        width: 100%;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-    # 2. 화면 구성 (레이아웃)
-    _, col_center, _ = st.columns([1, 1.5, 1])
+    # =================================================================
+    # 2. 메인 콘텐츠 (컬럼 사용 X -> 화면 전체 사용)
+    # =================================================================
+    # [중요] 여기 HTML 코드는 무조건 왼쪽 벽에 붙어있어야 합니다!!!
+    st.markdown("""
+<div class="home-container">
 
-    with col_center:
-        # 🚨 [가장 중요] 여기 HTML 코드들은 왼쪽 끝(벽)에 딱 붙어있어야 합니다!
-        # style="..." 안에 글자 크기(px)를 강제로 넣어서 사이즈 문제도 해결했습니다.
-        st.markdown("""
-<div style="display: flex; flex-direction: column; align-items: center; text-align: center;">
 <div class="ani-1" style="font-size: 80px; margin-bottom: 0px;">🐋</div>
+
 <div class="ani-2">
-<h1 style="font-size: 32px !important; font-weight: 800; color: #2c3e50; margin: 0; line-height: 1.2;">[voca海(hǎi) | voca high]</h1>
+<h1 style="font-size: 3rem !important; font-weight: 800; color: #2c3e50; margin: 0; line-height: 1.2; white-space: nowrap;">
+[voca海(hǎi) | voca high]
+</h1>
 </div>
-<div class="ani-3" style="color: #666; font-size: 16px; margin-top: 10px; margin-bottom: 20px;">
+
+<div class="ani-3" style="color: #666; font-size: 1.1rem; margin-top: 10px; margin-bottom: 20px;">
 단어의 바다에서 자유로이 날다!
 </div>
-<div class="ani-4" style="font-size: 15px; line-height: 1.6; color: #444;">
+
+<div class="ani-4" style="font-size: 1rem; line-height: 1.6; color: #444; max-width: 800px;">
 보카하이는 <b>HSK 등 중국어 시험</b>을 준비하는 학습자를 위한<br>
 <b>자료(단어장) + AI 기반</b> 단어 및 작문 학습 페이지입니다.
 </div>
+
 </div>
 """, unsafe_allow_html=True)
 
+    # 3. 하단 안내 및 튜토리얼 (여기는 파이썬 코드라 들여쓰기 됨)
+    # 아래쪽은 너무 퍼지면 보기 싫으니 살짝 모아줍니다.
+    _, col_bottom, _ = st.columns([1, 4, 1])
+    with col_bottom:
         st.markdown("---")
-        st.markdown("### 🌊 자, 이제 단어의 바다로~! 🏄")
+        # [중요] 여기도 마크다운 텍스트는 왼쪽에 붙여야 안전합니다.
+        st.markdown("### 🌊 자, 이제 단어의 바다로~! 🏄") 
+        
         st.info("👈 사이드바에서 **별명을 입력하고 메뉴를 선택**해 학습을 시작해보세요.")
         st.success("💡 처음이라면, 더 효과적인 학습을 위해 **하단의 튜토리얼**을 먼저 확인해보세요!")
+        
         st.write("") 
         show_tutorial(expanded=False)
-
-# 배포 트리거용 주석 (이 줄을 추가하고 저장하세요)        

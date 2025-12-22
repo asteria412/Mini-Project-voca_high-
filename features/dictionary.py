@@ -8,7 +8,7 @@ import pandas as pd
 from services.llm import search_word_info
 
 def show_dictionary_page():
-    st.title("📚 AI 단어사전")
+    st.header("📚 AI 단어사전")
     st.caption("내 단어장과 AI 지식을 동시에 활용하세요.")
 
     # 1. 내 단어장 데이터 준비

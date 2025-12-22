@@ -5,7 +5,7 @@ import plotly.express as px
 from services.google_sheets import load_data_by_nickname
 
 def show_dashboard_page():
-    st.title("📊 학습 대시보드")
+    st.header("📊 학습 대시보드")
     st.caption("나의 학습 기록과 성장 추이를 한눈에 확인하세요.")
 
     # 1. 사용자 별명 확인

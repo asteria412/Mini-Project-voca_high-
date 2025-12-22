@@ -36,7 +36,7 @@ def show_home():
 <div class="ani-1" style="font-size: 80px; margin-bottom: 0px;">🐋</div>
 
 <div class="ani-2">
-<h1 style="font-size: 3rem !important; font-weight: 800; color: #2c3e50; margin: 0; line-height: 1.2; white-space: nowrap;">
+<h1 style="font-size: 1.8rem !important; font-weight: 800; color: #2c3e50; margin: 0; line-height: 1.2; white-space: nowrap;">
 [voca海(hǎi) | voca high]
 </h1>
 </div>
@@ -58,8 +58,8 @@ def show_home():
     _, col_bottom, _ = st.columns([1, 4, 1])
     with col_bottom:
         st.markdown("---")
-        # [중요] 여기도 마크다운 텍스트는 왼쪽에 붙여야 안전합니다.
-        st.markdown("### 🌊 자, 이제 단어의 바다로~! 🏄") 
+        # [변경] ### -> #### 로 샵(#) 개수를 늘려 글자 크기를 줄였습니다.
+        st.markdown("#### 🌊 자, 이제 단어의 바다로~! 🏄") 
         
         st.info("👈 사이드바에서 **별명을 입력하고 메뉴를 선택**해 학습을 시작해보세요.")
         st.success("💡 처음이라면, 더 효과적인 학습을 위해 **하단의 튜토리얼**을 먼저 확인해보세요!")

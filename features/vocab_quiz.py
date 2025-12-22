@@ -44,7 +44,7 @@ def show_quiz_page():
 
     vocab_df = st.session_state['quiz_vocab']
     
-    st.title("✍️ 주관식 단어 시험")
+    st.subheader("✍️ 주관식 단어 시험")
     st.caption("한자와 한국어 뜻을 번갈아가며 맞히는 주관식 시험입니다.")
 
     # ---------------------------------------------------------

@@ -7,7 +7,7 @@
 
 import streamlit as st
 import random
-# [중요] services.llm에서 필요한 출제/채점 함수들을 모두 가져옵니다.
+# [중요] services.llm에서 필요한 출제/채점 함수들을 모두 가져옴
 from services.llm import (
     generate_scene_description,   # 100번 문제 출제 (4대 테마)
     generate_image_from_text,     # 100번 이미지 생성

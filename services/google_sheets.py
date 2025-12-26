@@ -37,7 +37,6 @@ def save_score(nickname, exam_type, score):
         return False
 
     try:
-        # [중요] 시트 이름이 'voca_db'여야 합니다. (다르면 수정 필요)
         sheet = client.open("voca_db").sheet1
         
         # 현재 시간 (한국 포맷)

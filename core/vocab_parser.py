@@ -38,7 +38,7 @@ TONE_CHARS_RE = re.compile(r"[āáǎàēéěèīíǐìōóǒòūúǔùüǖǘǚǜ
 GARBAGE_ROW_RE = re.compile(r"[\u2460-\u2473\u24D0-\u24E9]|정답|보기|해설")
 INSTRUCTION_KEYWORDS = ["하세요", "하시오", "찾아", "연결", "맞는", "고르", "다음", "알맞은"]
 
-# [업데이트] 회원님이 발견하신 해커스 특유의 노이즈 패턴 추가
+
 # ★(중요도), ※(참고), □(체크박스), ■(채워진박스) 등
 HACKERS_NOISE_RE = re.compile(r"^[★☆※□■\u2600-\u26FF\u2700-\u27BF]+$")
 
@@ -133,10 +133,6 @@ def parse_text_by_chunks(full_text, level, source):
         
         start_idx = curr_match.end()
         end_idx = matches[i+1].start() if i < len(matches)-1 else len(full_text)
-        
-        # [업데이트] 한자 바로 뒤에 붙은 '★' 제거
-        # 예: "批★" -> anchor가 "批"까지만 잡으므로, raw_chunk의 시작이 "★"가 됨.
-        # 위 clean_chunk_content 안의 HACKERS_NOISE_RE가 이를 처리함.
         
         pinyin, pos, ko = clean_chunk_content(full_text[start_idx:end_idx])
         

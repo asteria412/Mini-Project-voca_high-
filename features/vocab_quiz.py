@@ -3,8 +3,7 @@
 
 import streamlit as st
 import random
-import re   # [추가] 정규표현식을 사용하기 위해 추가
-# [추가] 구글 시트 저장 함수 임포트
+import re   
 from services.google_sheets import save_score
 
 def check_answer(user_input, correct_answer):
@@ -177,7 +176,6 @@ def show_quiz_page():
                 if 'saved_to_sheets' not in st.session_state:
                     with st.spinner(f"☁️ {nickname}님의 점수 저장 중..."):
                         # save_score(별명, 시험유형, 점수)
-                        # 주관식이므로 점수(score_percent)를 저장합니다.
                         success = save_score(nickname, "단어시험(주관식)", score_percent)
                         
                         if success:

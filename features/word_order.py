@@ -1,8 +1,5 @@
 # 경로: features/word_order.py
 # 상세 내용: 단어 다중 선택(최대 3개) 후 AI가 문장을 생성하고, 유저가 어순을 맞추는 학습
-# [수정] 1. 단어 조각 버튼 CSS 적용
-# [수정] 2. 점수 저장 로직 (별명 체크)
-# [수정] 3. "넣은 단어 취소" 기능 추가 (토글 방식)
 
 import streamlit as st
 import random

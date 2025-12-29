@@ -267,7 +267,7 @@ def generate_scene_description(level="HSK5"):
     if not client:
         return None
 
-    # [전략 데이터] 테마별 세부 상황 및 출제 가이드 (회원님 제공 코드 반영)
+    # [전략 데이터] 테마별 세부 상황 및 출제 가이드
     theme_strategies = {
         "비즈니스/오피스": {
             "sub_topics": [
